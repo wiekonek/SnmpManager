@@ -7,6 +7,7 @@ open Types
 
 
 module Parsing =
+  open Microsoft.FSharp.Core.LanguagePrimitives
 
 
   let defaultPath = @"C:\\Users\wieko\Documents\mibs\"
@@ -68,6 +69,24 @@ module Parsing =
   // for definitons or syntax???:
   // (CHOICE {\s+(?'choice'.*?)\s+})|(SEQUENCE {\s+(?'sequence'.*?)\s+})|(?'type'INTEGER|OCTET STRING|OBJECT IDENTIFIER|NULL)\s+?((\(((SIZE \((?'size'\d+)\))|(?'range'[-\d]+\.\.[-\d]+))\))|({\s+(?'enum'.*?)\s+}))?
 
+  let fileDataTypes fileContent =
+    let toRawDataType (m: Match) =
+      {
+        Name = m.Groups.["name"].Value;
+        Application = match m.Groups.Item("application").Success with
+                      | true -> Some (ParseInt32 (m.Groups.Item("application").Value))
+                      | false -> None;
+        Implicit = match m.Groups.Item("implicit").Success with
+                      | true -> Some (m.Groups.Item("implicit").Value = "IMPLICIT")
+                      | false -> None;
+        Definition = m.Groups.["definition"].Value;
+      }
+    let matches = Regex.Matches(fileContent,
+                                @"^[ ]*?(?'name'[\w-]+)? ::=$\s+(\[APPLICATION (?'application'\d?)\])?\s+(?'implicit'IMPLICIT)?\s+?((?'definition'.*?))\s+^$", 
+                                RegexOptions.Multiline ||| RegexOptions.Singleline)
+    matches
+    |> Seq.cast<Match>
+    |> Seq.map toRawDataType
  
 
   // ObjectIdentifiers
