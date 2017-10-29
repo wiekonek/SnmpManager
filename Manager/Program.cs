@@ -10,7 +10,6 @@ namespace Manager
     {
       Console.WriteLine("Hello World!");
       var parser = new Parsing.Parser("ezasy");
-      var asd = new Parsing.RawObjectType();
     }
   }
 }
