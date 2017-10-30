@@ -16,11 +16,12 @@ module Types =
     | Size of int
     | Range of Range
     /// key = EnumName; value = EnumId
-    | EnumValues of Dictionary<string, int> option
+    | EnumValues of Dictionary<string, int>
+    | Unrecognized of string
 
   type SimpleType = {
     Type: string;
-    Constraint: Constraint;
+    Constraint: Constraint option;
   }
   
   type SequenceType = {
@@ -36,7 +37,9 @@ module Types =
   type DataTypeDefinition =
     | Choice of ChoiceType
     | Sequence of SequenceType
-    | SimpleType of SimpleType
+    /// It's a name of another DataType
+    | SequenceOfSimpleTypes of string
+    | Simple of SimpleType
 
   type DataType = {
     Name: string;
@@ -49,7 +52,7 @@ module Types =
     Name: string;
     Application: int option;
     Implicit: bool option;
-    Definition: string;
+    RawDefinition: string;
   }
 
 
