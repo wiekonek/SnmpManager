@@ -3,9 +3,9 @@
 module Types =
   open System.Collections.Generic
   
-  type Access = ReadOnly = 1 | ReadWrite = 2 | WriteOnly = 3 | NotAccessible = 4 | Unrecognized = 0
+  type Access = ReadOnly | ReadWrite | WriteOnly | NotAccessible | Unrecognized
   
-  type Status = Mandatory = 1 | Optional = 2 | Obsolete = 3 | Unrecognized = 0
+  type Status = Mandatory | Optional | Obsolete | Unrecognized
 
   type Range = {
     Min: int;
@@ -62,7 +62,7 @@ module Types =
     Syntax: DataType;
     Access: Access;
     Status: Status;
-    Index: string option;
+    //Index: string option;
   }
 
   type RawObjectType = {
@@ -71,7 +71,7 @@ module Types =
     Access: string;
     Status: string;
     Description: string;
-    Index: string option;
+    //Index: string option;
     Oid: string;
   }
   

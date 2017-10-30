@@ -10,9 +10,7 @@ module Parsing =
   open Microsoft.FSharp.Core.LanguagePrimitives
   open System.Collections.Generic
 
-
   let defaultPath = @"C:\\Users\wieko\Documents\mibs\"
-
 
   // remove comments: --.* 
   let rawFileWithoutComments filePath =
@@ -126,8 +124,6 @@ module Parsing =
   let getDataTypes fileContent =
     fileDataTypes fileContent |> Seq.map parseRawDataType
 
- 
-
   // ObjectIdentifiers
   // https://regex101.com/r/yrXWzs/1
   // ^(?'name'[\w-]+)\s*OBJECT IDENTIFIER ::= { (?'oid'.*) }
@@ -146,14 +142,14 @@ module Parsing =
         Access = m.Groups.["access"].Value;
         Status = m.Groups.["status"].Value;
         Description = m.Groups.["description"].Value;
-        Index = match m.Groups.Item("index").Success with
-                      | true -> Some (m.Groups.Item("index").Value)
-                      | false -> None;
+        //Index = match m.Groups.Item("index").Success with
+        //              | true -> Some (m.Groups.Item("index").Value)
+        //              | false -> None;
         Oid = m.Groups.["oid"].Value;
       }
     let matches = Regex.Matches(
                     fileContent,
-                    @"^(?'obj'[\w-]+) OBJECT-TYPE$\s+SYNTAX\s+(?'syntax'.*?)$\s+ACCESS\s+(?'access'.*?)$\s+STATUS\s+(?'status'.*?)$\s+DESCRIPTION\s+\""(?'description'.*?)\""\s+(INDEX\s+{ (?'index'.*?) }\s+)?(REFERENCE\s+\""(?'reference'.*?)\""\s+)?(DEFVAL\s+{ (?'defval'.*?) }\s+)?::= { (?'oid'.+?) }",
+                    """^(?'obj'[\w-]+) OBJECT-TYPE$\s+SYNTAX\s+(?'syntax'.*?)$\s+ACCESS\s+(?'access'.*?)$\s+STATUS\s+(?'status'.*?)$\s+DESCRIPTION\s+"(?'description'.*?)".*?\s+(INDEX\s+{ (?'index'.*?) }\s+)?::= { (?'oid'.+?) }""",
                     RegexOptions.Multiline ||| RegexOptions.Singleline) 
     matches
     |> Seq.cast<Match>
