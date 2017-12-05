@@ -2,14 +2,14 @@
 
 module Types =
   open System.Collections.Generic
-  
+
   type Access = ReadOnly | ReadWrite | WriteOnly | NotAccessible | Unrecognized
   
   type Status = Mandatory | Optional | Obsolete | Unrecognized
 
   type Range = {
-    Min: int;
-    Max: int;
+    Min: int64;
+    Max: int64;
   }
 
   type Constraint =
@@ -40,12 +40,13 @@ module Types =
     /// It's a name of another DataType
     | SequenceOfSimpleTypes of string
     | Simple of SimpleType
+    | DataTypeReference of string
 
   type DataType = {
-    Name: string;
+    Name: string option;
     Application: int option;
     Implicit: bool option;
-    Definition: DataTypeDefinition;
+    Definition: DataTypeDefinition option;
   }
 
   type RawDataType = {
@@ -55,35 +56,43 @@ module Types =
     RawDefinition: string;
   }
 
-
-  type ObjectType = {
-    OidPart: int;
-    Name: string;
-    Syntax: DataType;
-    Access: Access;
-    Status: Status;
-    //Index: string option;
-  }
-
-  type RawObjectType = {
-    Name: string;
-    Syntax: string;
-    Access: string;
-    Status: string;
-    Description: string;
-    //Index: string option;
-    Oid: string;
-  }
-  
-
   type RawImports = {
     Imports: string;
     FileName: string;
   }
 
+  //type Imports = {
+  //  FileName: string;
+  //  Imports: string[];
+  //}
+
   type RawObjectIdentifier = {
     Name: string;
     Oid: string;
   }
-    
 
+  type ObjectIdentifier = {
+    OidPart: int option;
+    Name: string;
+  }
+
+  type ObjectType = {
+    OidPart: int;
+    Name: string;
+    Syntax: DataType;
+    //Syntax: DataTypeDefinition;
+    //Syntax: string;
+    Access: Access option;
+    Status: Status option;
+    Description: string;
+  }
+
+  type RawObjectType = {
+    Name: string;
+    Syntax: DataTypeDefinition;
+    //Syntax: string;
+    Access: string;
+    Status: string;
+    Description: string;
+    Oid: string;
+  }
