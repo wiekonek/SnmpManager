@@ -7,6 +7,10 @@ module Types =
   
   type Status = Mandatory | Optional | Obsolete | Unrecognized
 
+  type Visibility = Universal | Application | ContextSpecific | Private
+
+  type Conversion = Implicit | Explicit
+
   type Range = {
     Min: int64;
     Max: int64;
@@ -40,19 +44,22 @@ module Types =
     /// It's a name of another DataType
     | SequenceOfSimpleTypes of string
     | Simple of SimpleType
+    /// It's a name of another DataType
     | DataTypeReference of string
 
   type DataType = {
     Name: string option;
-    Application: int option;
-    Implicit: bool option;
+    Visibility: Visibility;
+    Tag: int option;
+    Conversion: Conversion;
     Definition: DataTypeDefinition option;
   }
 
   type RawDataType = {
     Name: string;
-    Application: int option;
-    Implicit: bool option;
+    Tag: int option;
+    Visibility: Visibility;
+    Conversion: Conversion;
     RawDefinition: string;
   }
 
@@ -80,8 +87,6 @@ module Types =
     OidPart: int;
     Name: string;
     Syntax: DataType;
-    //Syntax: DataTypeDefinition;
-    //Syntax: string;
     Access: Access option;
     Status: Status option;
     Description: string;
@@ -90,7 +95,6 @@ module Types =
   type RawObjectType = {
     Name: string;
     Syntax: DataTypeDefinition;
-    //Syntax: string;
     Access: string;
     Status: string;
     Description: string;

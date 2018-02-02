@@ -54,6 +54,7 @@
     <Compile Include="Types.fs" />
     <Compile Include="Tree.fs" />
     <Compile Include="Parsing.fs" />
+    <Compile Include="Encoding.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

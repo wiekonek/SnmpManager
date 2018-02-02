@@ -11,13 +11,6 @@ module Parsing =
   open System.Collections.Generic
   open Tree
 
-  
-  type ParsingResult = {
-    Tree: MibTree;
-    DataTypes: Dictionary<string, DataType>
-  }
-
-
   let defaultPath = @"C:\\Users\wieko\Documents\mibs\"
 
   // remove comments: --.* 
@@ -56,16 +49,22 @@ module Parsing =
     let toRawDataType (m: Match) =
       {
         Name = m.Groups.["name"].Value;
-        Application = match m.Groups.Item("application").Success with
-                      | true -> Some (ParseInt32 (m.Groups.Item("application").Value))
-                      | false -> None;
-        Implicit = match m.Groups.Item("implicit").Success with
-                      | true -> Some (m.Groups.Item("implicit").Value = "IMPLICIT")
-                      | false -> None;
+        Visibility = 
+          if not (m.Groups.Item("visibility").Success) then ContextSpecific else 
+          match m.Groups.Item("visibility").Value with
+          | "APPLICATION" -> Application
+          | "PRIVATE" -> Private
+          | "UNIVERSAL" -> Universal
+          | _ -> Universal
+        Tag = if m.Groups.Item("tag").Success then
+                Some (ParseInt32 (m.Groups.Item("tag").Value))
+              else
+                None
+        Conversion = if m.Groups.Item("implicit").Success then Implicit else Explicit;
         RawDefinition = m.Groups.["definition"].Value;
       }
     let matches = Regex.Matches(fileContent,
-                                @"^[ ]*?(?'name'[\w-]+)? ::=$\s+(\[APPLICATION (?'application'\d?)\])?\s+(?'implicit'IMPLICIT)?\s+?((?'definition'.*?))\s+^$", 
+                                @"^[ ]*?(?'name'[\w-]+)? ::=$\s+(\[((?'visibility'(APPLICATION)|(PRIVATE)|(UNIVERSAL)) )?(?'tag'\d?)\])?\s+(?'implicit'IMPLICIT)?\s+?((?'definition'.*?))\s+^$", 
                                 RegexOptions.Multiline ||| RegexOptions.Singleline)
     matches
     |> Seq.cast<Match>
@@ -131,13 +130,13 @@ module Parsing =
 
       // https://regex101.com/r/5L5QYq/1
 
-
   let parseRawDataType (raw: RawDataType) =
     {
       Name = Some raw.Name;
-      Application = raw.Application;
-      Implicit = raw.Implicit;
-      Definition = Some (parseRawDefinition raw.RawDefinition)
+      Visibility = raw.Visibility;
+      Conversion = raw.Conversion;
+      Tag = raw.Tag; //TODO check this
+      Definition = Some (parseRawDefinition raw.RawDefinition);
     }
 
   let getDataTypes fileContent =
@@ -207,13 +206,14 @@ module Parsing =
     |> Seq.map toRawObjectType
   
   let parseToTree fileName = 
-    let tree: MibTree = OidNode ({ Name = "iso"; OidPart = Some(1)}, new List<MibTree>())
+    let rootNode: MibNode = Node ( Oid ( {Name = "iso"; OidPart = Some(1)}), new List<MibNode>())
     let dataTypesBase = new Dictionary<string, DataType>() 
+    let tree: MibTree = ({ Root = rootNode; DataTypes = dataTypesBase })
     let rec insertOid (oidList: ObjectIdentifier list) treeNode =
       match oidList |> Seq.toList with
       | h :: t -> 
-        let child = OidNode ({ Name = h.Name; OidPart = h.OidPart }, new List<MibTree>())
-        withChildren treeNode (fun children -> children.Add(child))
+        let child = Node ( Oid ({ Name = h.Name; OidPart = h.OidPart }), new List<MibNode>())
+        withChildren treeNode (fun (children: List<MibNode>) -> children.Add(child))
         insertOid t child
       | [] -> ()
 
@@ -224,7 +224,7 @@ module Parsing =
         let name = m.Groups.Item("name").Value
         dataTypesBase.Item(name)
       | other ->
-        { Name = None; Application = None; Implicit = None; Definition = Some other}
+        { Name = None; Visibility = ContextSpecific; Conversion = Explicit; Tag = None; Definition = Some other}
 
     let parseRawObjectType (raw: RawObjectType) =
       let oidList = parseRawObjectIdentifier { Name = raw.Name; Oid = raw.Oid} |> Seq.toList
@@ -240,7 +240,7 @@ module Parsing =
           Description = raw.Description
           OidPart = child.Item(0).OidPart.Value
         }
-        withChildren fullParent (fun children -> children.Add(ObjectNode (obj, new List<MibTree>())))
+        withChildren fullParent (fun (children: List<MibNode>) -> children.Add( Node (Object(obj), new List<MibNode>())))
         obj
       | _ -> failwith ": /"
     let rec parseFile fileName tree (dataTypesDict: Dictionary<string, DataType>) =
@@ -273,4 +273,4 @@ module Parsing =
         ()
      
     parseFile fileName tree dataTypesBase
-    { Tree = tree; DataTypes = dataTypesBase }
+    tree
