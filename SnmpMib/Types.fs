@@ -9,7 +9,7 @@ module Types =
 
   type Visibility = Universal | Application | ContextSpecific | Private
 
-  type Conversion = Implicit | Explicit
+  type Conversion = Universal | Implicit | Explicit
 
   type Range = {
     Min: int64;

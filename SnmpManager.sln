@@ -1,15 +1,20 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2020
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "SnmpMib", "SnmpMib\SnmpMib.fsproj", "{B9CE0DCA-E6F3-46E3-AB8D-262B270625EA}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Manager", "Manager\Manager.fsproj", "{EDEFDD48-FEB2-4362-B29F-4BF05BDBEBF6}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "Tests\Tests.fsproj", "{0D877DAF-56B2-4C82-8034-18EDE139BE47}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests", "Tests\Tests.fsproj", "{0D877DAF-56B2-4C82-8034-18EDE139BE47}"
 	ProjectSection(ProjectDependencies) = postProject
 		{B9CE0DCA-E6F3-46E3-AB8D-262B270625EA} = {B9CE0DCA-E6F3-46E3-AB8D-262B270625EA}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{04238959-9BBD-4F9A-8686-0E377A12059E}"
+	ProjectSection(SolutionItems) = preProject
+		task3.pdf = task3.pdf
 	EndProjectSection
 EndProject
 Global

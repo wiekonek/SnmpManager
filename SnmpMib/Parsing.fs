@@ -54,17 +54,21 @@ module Parsing =
           match m.Groups.Item("visibility").Value with
           | "APPLICATION" -> Application
           | "PRIVATE" -> Private
-          | "UNIVERSAL" -> Universal
-          | _ -> Universal
+          | "UNIVERSAL" -> Visibility.Universal
+          | _ -> Visibility.Universal
         Tag = if m.Groups.Item("tag").Success then
                 Some (ParseInt32 (m.Groups.Item("tag").Value))
               else
                 None
-        Conversion = if m.Groups.Item("implicit").Success then Implicit else Explicit;
+        Conversion =
+          if m.Groups.Item("implicit").Success then Conversion.Universal else
+          match m.Groups.Item("implicit").Value with
+          | "IMPLICI" -> Implicit
+          | _ -> Explicit
         RawDefinition = m.Groups.["definition"].Value;
       }
     let matches = Regex.Matches(fileContent,
-                                @"^[ ]*?(?'name'[\w-]+)? ::=$\s+(\[((?'visibility'(APPLICATION)|(PRIVATE)|(UNIVERSAL)) )?(?'tag'\d?)\])?\s+(?'implicit'IMPLICIT)?\s+?((?'definition'.*?))\s+^$", 
+                                @"^[ ]*?(?'name'[\w-]+)? ::=$\s+(\[((?'visibility'(APPLICATION)|(PRIVATE)|(UNIVERSAL)) )?(?'tag'\d?)\])?\s+(?'implicit'(IMPLICIT)|(EXPLICIT))?\s+?((?'definition'.*?))\s+^$", 
                                 RegexOptions.Multiline ||| RegexOptions.Singleline)
     matches
     |> Seq.cast<Match>
