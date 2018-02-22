@@ -72,7 +72,8 @@ module Encoding =
         else u2HexValue
       getLengthInHex u4HexValue + u4HexValue
 
-    let encodeStringValue (octetString: string)
+    let encodeStringValue (octetString: string) =
+      ()
     
 
   let encodeBerIdentifier (identifer: BerIdentifier) =
