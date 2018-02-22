@@ -4,6 +4,10 @@ module Encoding =
   open Types
   open System
 
+  exception ConstraintException of string
+
+  let uppercase (x: string) = x.ToUpper()
+
   let visibilityCodes = 
     Map.ofList[
       (Visibility.Universal, 0b00);
@@ -38,42 +42,60 @@ module Encoding =
   }
     
   module ValueEncoders =
+    open System.Text.RegularExpressions
+
     let getLengthInHex (value: string) =
       let length = value.Length / 2
       String.Format("{0:X2}", length)
 
-    let checkLongConstraints value constraints =
+    let checkLongConstraints constraints value  =
       match constraints with
       | Some cons ->
         match cons with
         | Range range ->
           if value >= range.Min && value <= range.Max
           then ()
-          else failwith "Value not in range"
+          else raise (ConstraintException "Value not in range")
         | _ -> failwith "NOT IMPLEMENTED YET"
       | None -> ()
+      value
 
     let encodeLongValue (intString: string) constraints =
-      // TODO: Consider support for negative numbers ;)
-      let i = int64 intString
-      checkLongConstraints i constraints 
-      let hexValue = String.Format("{0:X}", i)
-      let u2HexValue =
-        if hexValue.Length % 2 = 1
-        then "0" + hexValue
-        else hexValue
-      let baseLength = u2HexValue.Length;
-      let u4HexValue =
-        // przepraszam xD, ale to sprawdza czy jest jedynka na początku kolejnych ósemek w zapisie binarnym
-        // i dodaje jeszcze 00 z przodu jak jest 1, potrzebne do u2, nazwy zmiennych z czapy
-        // czyli jak mamy 1000 0000 to dodamy jeszcze zera w hex z przodu, żeby było tak jak w mibach
-        if (baseLength % 2) = 0 && ((i &&& (1L <<< (4*baseLength-1))) >>> (4*baseLength-1)) = 1L 
-        then "00" + u2HexValue
-        else u2HexValue
-      getLengthInHex u4HexValue + u4HexValue
+      int64 intString
+      |> checkLongConstraints constraints
+      |> fun i -> String.Format("{0:X2}", i), i
+      ||> fun str i ->
+        let len = str.Length
+        match len % 2 with
+        | 1 -> "0" + str
+        | 0 when i >>> 4 * len - 1 = 1L -> "00" + str
+        | _ -> str
+      |> fun str -> getLengthInHex str + str
+      
 
     let encodeStringValue (octetString: string) =
-      ()
+      Regex.Replace(octetString, "[\s]+", "")
+      |> uppercase
+      |> fun s -> if s.Length % 2 = 0 then s else "0" + s
+      |> fun s -> 
+        if Regex.IsMatch(s, "^[A-F0-9]*$", RegexOptions.Multiline)
+        then s, s.Length / 2
+        else failwith "Not an OCTET STRING"
+      ||> fun s len ->
+        match len with
+        | _ when len < 127 -> String.Format("{0:X2}{1}", len, s)
+        | _ when len = 127 -> failwith "Not shure what I should do with this length : /"
+        | _ when len > 127 ->
+          len
+          |> fun _ -> String.Format("{0:X2}", len)
+          |> fun lenStr ->
+            let l = lenStr.Length
+            match l % 2 with
+            | 1 -> "0" + lenStr
+            | _ -> lenStr
+          |> fun res -> String.Format("{0:X2}{1}{2}", (res.Length / 2) ||| 0x80, res, s)
+        | _ -> failwith "NOT IMPLEMENTED YET"
+      
     
 
   let encodeBerIdentifier (identifer: BerIdentifier) =
@@ -93,6 +115,7 @@ module Encoding =
         | Simple simple ->
           match defaultTagCodes.Item(simple.Type) with
           | DefaultTags.Integer -> ValueEncoders.encodeLongValue value simple.Constraint
+          | DefaultTags.OcetetString -> ValueEncoders.encodeStringValue value
           | _ -> failwith "NOT IMPLEMENTED YET"
         | _ -> failwith "NOT IMPLEMENTED YET"
     let tag =
